@@ -1,0 +1,29 @@
+{
+	"name": "tacoberu/nette-security",
+	"description": "Implemnetation bundle for Nette Security. Provides permission-based access control management via ACL (Access Control List)",
+	"keywords": ["nette", "authentication", "authorization", "ACL"],
+	"license": ["MIT"],
+	"authors": [
+		{
+			"name": "Martin Takáč",
+			"homepage": "https://martin.takac.name"
+		}
+	],
+	"require": {
+		"php": ">=7.1 <8.3",
+		"ext-json": "*",
+		"ext-tokenizer": "*"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "~7.0",
+        "tracy/tracy": "^2.0",
+		"phpstan/phpstan": "^1.2"
+	},
+	"autoload": {
+		"classmap": ["libs/"]
+	},
+	"scripts": {
+		"phpstan": "phpstan analyse",
+		"tester": "tester tests -s"
+	}
+}
