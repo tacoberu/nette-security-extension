@@ -1,0 +1,61 @@
+-
+	id: 42
+	login: admin
+	password: z77eXlP
+	displayName: 'Administator'
+	created_at: '2001-02-31 12:00'
+	permissions:
+		- Sign:in:any
+#		- Abc:Read:any
+		- Settings:Read:any
+		- Layout:Update:any
+		- Stylesheet:Update:any
+		- Script:Update:any
+		- Dataschema:Read:any
+		- Dataschema:Update:any
+		- Console:Use:any
+		- Page:Create:any
+		- Page:Read:any
+		- Page:Update:any
+		- Page:Delete:any
+		- Snippet:Create:any
+		- Snippet:Read:any
+		- Snippet:Update:any
+		- Snippet:Delete:any
+#		- File:Create:any
+#		- File:Read:any
+#		- File:Update:any
+#		- File:Delete:any
+#		- Account:Create:any
+		- Account:Read:any
+		- Account:Update:any
+		- Account:Delete:any
+		- Manifest:Read:any
+		- Manifest:Update:any
+		- Extensions:Read:any
+		- Extensions:Update:any
+
+-
+	id: 0
+	login: quest
+	password: ''
+	permissions:
+		- Sign:in:any
+		- "Page:Read:(scope = public)"
+		- File:Read:any
+		- "Account:Read:(id = $sessionUser)"
+
+-
+	login: demo
+	password: secret
+	permissions:
+		- Sign:in:any
+
+-
+	login: uzivatel
+	password: secret
+	permissions:
+		- Sign:in:any
+		- Page:Read:any
+		- Page:Create:any
+		- Page:Update:any

@@ -9,23 +9,22 @@ namespace Taco\NetteSecurity;
 use Nette;
 use Nette\Security\IAuthorizator;
 use Nette\Security\User as SecurityUser;
+use LogicException;
 
 
 /**
+ * Architektura, kdy neřešíme role, ale jen oprávnění. Každý uživatel má sumu oprávnění na každý zdroj. Pokud nemá
+ * tak nemá přístup. U každého oprávnění evidujeme Zdroj, Operaci, a Podmínku, která musí být splněna.
  * @property-read String $name
  * @property-read String $password
  */
 class Authorizator implements IAuthorizator
 {
 
-	private const CondAny = 'any';
-
-
 	use Nette\SmartObject;
 
 
 	private PermissionsProvider $model;
-
 
 	private SecurityUser $user;
 
@@ -44,7 +43,7 @@ class Authorizator implements IAuthorizator
 
 
 
-	function isAllowed($role, $resource, $privilege) : bool
+	function isAllowed($_role, $resource, $privilege) : bool
 	{
 		if ( ! $this->hasPermission($privilege)) {
 			return False;
@@ -90,7 +89,7 @@ class Authorizator implements IAuthorizator
 	private static function isAnyPrivilege(string $priv) : bool
 	{
 		list(,, $cond) = explode(':', $priv, 3);
-		return $cond === self::CondAny;
+		return $cond === Permission::ConditionAny;
 	}
 
 }

@@ -10,10 +10,12 @@ use Taco\BNF\Parser;
 use Taco\BNF\Token;
 use Taco\BNF\Combinators\Whitechars;
 use Taco\BNF\Combinators\Pattern;
-use Taco\BNF\Combinators\Match;
+use Taco\BNF\Combinators\Match_;
 use Taco\BNF\Combinators\Sequence;
 use Taco\BNF\Combinators\Variants;
 use Taco\BNF\Combinators\OneOf;
+use Taco\BNF\Combinators\Text;
+use LogicException;
 
 
 class PredicateBuilder
@@ -37,7 +39,7 @@ class PredicateBuilder
 					'~NOT\s+LIKE~i',
 					'~NOT\s+IN~i',
 				]),
-				new Match(Null, [
+				new Match_(Null, [
 					//~ 'LIKE',
 					//~ 'IN',
 					'!=',
@@ -55,11 +57,14 @@ class PredicateBuilder
 			$sep,
 			$op,
 			$sep,
-			new Match('value', [
-				'Null',
-				'True',
-				'False',
-				'$sessionUser',
+			new OneOf(Null, [
+				new Match_('value.symbol', [
+					'Null',
+					'True',
+					'False',
+					'$sessionUser',
+				]),
+				new Text('value.text'),
 			]),
 			//~ new Pattern('param (:name, :arg1, etc)', ['~\:[a-z][a-z0-9]*~']),
 		]);
@@ -96,7 +101,26 @@ class PredicateBuilder
 				}
 
 			case 'expr (col = :param)':
-				return new PredicateOperation($ast->content[0], $ast->content[1], $values->get($ast->content[2]));
+				return new PredicateOperation($ast->content[0], $ast->content[1], $values->get(self::buildToken($ast->content[2])));
+
+			default:
+				throw new LogicException("Illegal token '{$ast->getName()}'.");
+		}
+	}
+
+
+
+	private static function buildToken(Token $ast)
+	{
+		switch ($ast->getName()) {
+			case 'value.text':
+				if ($ast->content[0] === '"' || $ast->content[0] === "'") {
+					return substr($ast->content, 1, -1);
+				}
+				return $ast->content;
+
+			case 'value.symbol':
+				return $ast->content;
 
 			default:
 				throw new LogicException("Illegal token '{$ast->getName()}'.");

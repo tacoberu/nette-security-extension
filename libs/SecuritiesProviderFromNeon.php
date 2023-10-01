@@ -6,8 +6,8 @@
 
 namespace Taco\NetteSecurity;
 
-use Nette\Neon;
-use Nette\Security\Authenticator;
+use Nette\Utils\Validators;
+use Nette\Security\IAuthenticator;
 use Nette\Security\AuthenticationException;
 use Nette\Security\IIdentity;
 use Nette\Security\SimpleIdentity;
@@ -25,8 +25,7 @@ class SecuritiesProviderFromNeon implements PermissionsProvider, IAuthenticator
 
 	function __construct(string $fileName)
 	{
-		self::requireFileExists($fileName);
-		$this->table = self::build((new Neon\Decoder)->decode(file_get_contents($fileName)));
+		$this->table = AuthenticationsFromNeon::fromFile($fileName);
 	}
 
 
@@ -56,14 +55,17 @@ class SecuritiesProviderFromNeon implements PermissionsProvider, IAuthenticator
 		foreach ($this->table as $x) {
 			if (strcasecmp($x->login, $login) === 0) {
 				if ($this->verifyPassword($password, $x->password)) {
-					return new SimpleIdentity($x->id, null, ['realname' => $x->login]);
+					return new SimpleIdentity($x->id, null, [
+						'login' => $x->login,
+						'displayName' => $x->login
+						]);
 				}
 				else {
-					throw new AuthenticationException('Invalid password.', Authenticator::INVALID_CREDENTIAL);
+					throw new AuthenticationException('Invalid password.', IAuthenticator::INVALID_CREDENTIAL);
 				}
 			}
 		}
-		throw new AuthenticationException("User '$login' not found.", Authenticator::IDENTITY_NOT_FOUND);
+		throw new AuthenticationException("User '$login' not found.", IAuthenticator::IDENTITY_NOT_FOUND);
 	}
 
 
@@ -73,57 +75,4 @@ class SecuritiesProviderFromNeon implements PermissionsProvider, IAuthenticator
 		return $password === $passOrHash;
 	}
 
-
-
-	private static function build(array $src) : array
-	{
-		$ret = [];
-		foreach ($src as $x) {
-			$x = self::buildAccount($x);
-			$ret[$x->id] = $x;
-		}
-		return $ret;
-	}
-
-
-
-	private static function buildAccount(array $src)
-	{
-		return (object) [
-			'id' => isset($src['id']) ? $src['id'] : $src['login'],
-			'login' => $src['login'],
-			'password' => $src['password'],
-			'permissions' => self::buildPermissions($src['permissions']),
-		];
-	}
-
-
-
-	private static function buildPermissions($src) : array
-	{
-		$ret = [];
-		foreach ($src as $code => $desc) {
-			$ret[$code] = self::buildPermissionOne($code, $desc);
-		}
-		return $ret;
-	}
-
-
-
-	private static function buildPermissionOne($code, $descr)
-	{
-		return (string) $descr;
-	}
-
-
-
-	private static function requireFileExists(string $fn)
-	{
-		if ( ! file_exists($fn)) {
-			throw new RuntimeException("File '{$fn}' is not found.");
-		}
-		if ( ! is_readable($fn)) {
-			throw new RuntimeException("File '{$fn}' is not readable.");
-		}
-	}
 }

@@ -17,11 +17,13 @@ class AclMacroSet extends Latte\Macros\MacroSet
 	static function install(Latte\Compiler $compiler): void {
 		$me = new self($compiler);
 		$me->addMacro('allowed', [$me, 'macroAllowed'], '}');
+		$me->addMacro('allowedelse', [$me, 'macroElse']);
 	}
 
 
 
 	/**
+	 * {allowed Page:create:any}
 	 * n:allowed="Page:create:any"
 	 * n:allowed="Page:edit:any | Page($entity->resourceId):edit:(author = $sessionUser)"
 	 * n:allowed="Page($entity->resourceId):edit:(author = $sessionUser and published = Null)"
@@ -41,6 +43,29 @@ class AclMacroSet extends Latte\Macros\MacroSet
 			}
 		});
 		return $writer->write("if ({$expression}) %node.line  {");
+	}
+
+
+
+	/**
+	 * {allowedelse}
+	 */
+	function macroElse(Latte\MacroNode $node, Latte\PhpWriter $writer): string
+	{
+		if ($node->args !== '' && Latte\Helpers::startsWith($node->args, 'if')) {
+			throw new Latte\CompileException('Arguments are not allowed in {allowedelse}.');
+		}
+
+		$node->validate(false, ['allowed']);
+
+		$parent = $node->parentNode;
+		if (isset($parent->data->else)) {
+			throw new Latte\CompileException('Tag ' . $parent->getNotation() . ' may only contain one {else} clause.');
+		}
+
+		$parent->data->else = true;
+
+		return $writer->write('} else %node.line {');
 	}
 
 }

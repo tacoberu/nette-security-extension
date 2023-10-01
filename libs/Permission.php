@@ -8,6 +8,7 @@ namespace Taco\NetteSecurity;
 
 use Nette;
 use Nette\Security\User as SecurityUser;
+use LogicException;
 
 
 /**
@@ -15,13 +16,21 @@ use Nette\Security\User as SecurityUser;
  */
 class Permission
 {
+	const ConditionAny = 'any';
+
 	private string $resource;
 	private string $condition;
 
 
+	/**
+	 * <entity>:<operation>:<condition>
+	 * Page:show:any
+	 * Post:edit:(author = $sessionUser)
+	 * Post:remove:(author = $sessionUser and published = Null)
+	 */
 	static function create(string $code)
 	{
-		list($resource, $operation, $condition) = explode(':', $code, 3);
+		list($resource, $_operation, $condition) = explode(':', $code, 3);
 		return new self($resource, $condition);
 	}
 
@@ -37,13 +46,13 @@ class Permission
 
 	function match(?ResourceId $resource, SecurityUser $user) : bool
 	{
-		if (empty($resource) && $this->condition === 'any') {
+		if (empty($resource) && $this->condition === self::ConditionAny) {
 			return True;
 		}
-		if ($resource && $resource->getResourceId() !== $this->resource) {
-			throw new \LogicException("Unconsistenci resource: {$resource->getResourceId()} !== {$this->resource}.");
+		if ($resource && $resource->getResourceType() !== $this->resource) {
+			throw new LogicException("Unconsistenci resource: {$resource->getResourceType()} !== {$this->resource}.");
 		}
-		if ($this->condition === 'any') {
+		if ($this->condition === self::ConditionAny) {
 			return True;
 		}
 
@@ -56,24 +65,33 @@ class Permission
 
 
 /**
- * For example: `new ResourceId('Post', ['author' => 5])`
+ * For example: `new ResourceId('Post', '42', ['author' => 5])`
  */
-class ResourceId
+class ResourceId implements Nette\Security\IResource
 {
+	private string $type;
 	private string $id;
 	private array $attrs = [];
 
-	function __construct($id, array $attrs = [])
+	function __construct(string $type, string $id, array $attrs = [])
 	{
+		$this->type = $type;
 		$this->id = $id;
 		$this->attrs = $attrs;
 	}
 
 
 
-	function getResourceId()
+	function getResourceId() : string
 	{
 		return $this->id;
+	}
+
+
+
+	function getResourceType() : string
+	{
+		return $this->type;
 	}
 
 
